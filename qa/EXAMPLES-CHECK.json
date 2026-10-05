@@ -1,0 +1,37 @@
+{
+  "full-dashboard.html": {
+    "page_errors": [],
+    "console_errors": [],
+    "fluid_cards": 4,
+    "folder_cards": 12,
+    "enter_visible": true
+  },
+  "fluid-cards.html": {
+    "page_errors": [],
+    "console_errors": [],
+    "fluid_cards": 4,
+    "folder_cards": 12,
+    "enter_visible": false
+  },
+  "acrylic-carousel.html": {
+    "page_errors": [],
+    "console_errors": [],
+    "fluid_cards": 4,
+    "folder_cards": 12,
+    "enter_visible": false
+  },
+  "breathing-dashboard.html": {
+    "page_errors": [],
+    "console_errors": [],
+    "fluid_cards": 4,
+    "folder_cards": 12,
+    "enter_visible": false
+  },
+  "particle-sphere.html": {
+    "page_errors": [],
+    "console_errors": [],
+    "fluid_cards": 4,
+    "folder_cards": 12,
+    "enter_visible": true
+  }
+}

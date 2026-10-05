@@ -1,0 +1,293 @@
+/* ========================================================================== 
+   Particle 3D card breathing system — full fluid-card breathing pass
+   The three main glass panels now visibly contract and expand as complete
+   surfaces. Fluid-card edge breathing is intentionally stronger, while the
+   ambient halo, active-card bloom and particle field are smaller and cleaner.
+   ========================================================================== */
+:root{
+  --v31-card-scale:1;
+  --v31-card-lift:0px;
+  --v31-card-brightness:1;
+  --v31-card-glow-near:12px;
+  --v31-card-glow-far:25px;
+  --v31-card-glow-alpha:.16;
+  --v31-stage-lift:0px;
+  --v31-ambient-scale:.95;
+  --v31-ambient-opacity:.14;
+  --v31-ambient-blur:18px;
+  --v31-floor-opacity:.10;
+  --v31-floor-blur:6px;
+  --v31-panel-scale:1;
+  --v31-panel-brightness:1;
+  --v31-panel-alpha:.018;
+  --v31-panel-edge:.055;
+  --v31-fluid-alpha:.16;
+  --v31-fluid-edge:.22;
+  --v31-fluid-scale:1;
+  --v31-fluid-glow:4px;
+  --v31-fluid-brightness:1;
+  --v31-fluid-card-scale:1;
+  --v31-fluid-card-lift:0px;
+  --v31-fluid-card-brightness:1;
+  --v31-fluid-card-glow:0px;
+  --v31-fluid-body-scale:1;
+  --v31-fluid-body-brightness:1;
+  --v31-progress-alpha:.36;
+}
+
+/* Disable all old pulse sources. One requestAnimationFrame controller owns
+   the complete motion phase, so visual layers never drift out of sync. */
+.folder-card.active .acrylic-shell,
+.folder-deck,.stack-ambient,.folder-stage::before,.glass::before,.glass::after,
+.stack-progress::after,.fluid-stat::after{animation:none!important}
+
+/* Active card: clear physical expansion with deliberately compact light. */
+html:not([data-breath-mode="off"])[data-breath-active="true"] .folder-card.active{
+  scale:var(--v31-card-scale)!important;
+  translate:0 var(--v31-card-lift)!important;
+  transform-origin:50% 56%;
+  filter:
+    brightness(var(--v31-card-brightness))
+    drop-shadow(0 25px 29px rgba(0,0,0,.70))
+    drop-shadow(0 0 var(--v31-card-glow-near) rgba(var(--theme-accent-rgb),var(--v31-card-glow-alpha)))
+    drop-shadow(0 0 var(--v31-card-glow-far) rgba(var(--theme-accent-rgb),calc(var(--v31-card-glow-alpha)*.44)))!important;
+  will-change:scale,translate,filter;
+}
+html:not([data-breath-mode="off"])[data-breath-active="true"] .folder-card.active .acrylic-shell{
+  box-shadow:
+    inset 1px 0 0 rgba(var(--theme-highlight-rgb),.90),
+    inset -1px 0 0 rgba(var(--theme-accent-rgb),.54),
+    inset 0 1px 0 rgba(var(--theme-highlight-rgb),.88),
+    0 0 calc(var(--v31-card-glow-near)*.45) rgba(var(--theme-accent-rgb),calc(var(--v31-card-glow-alpha)*.62)),
+    0 0 calc(var(--v31-card-glow-far)*.34) rgba(var(--theme-accent-rgb),calc(var(--v31-card-glow-alpha)*.30))!important;
+}
+
+/* Whole-stage breathing remains small; the perceptible rhythm now comes from
+   complete panel scaling instead of a giant luminous cloud. */
+html:not([data-breath-mode="off"])[data-breath-stage="true"] .folder-deck{
+  translate:0 var(--v31-stage-lift);
+  will-change:translate;
+}
+.folder-stage.is-dragging .folder-deck{translate:0 0!important}
+
+html:not([data-breath-mode="off"])[data-breath-ambient="true"] .stack-ambient{
+  scale:var(--v31-ambient-scale);
+  opacity:var(--v31-ambient-opacity)!important;
+  filter:blur(var(--v31-ambient-blur))!important;
+  transform-origin:50% 50%;
+  will-change:scale,opacity,filter;
+}
+html:not([data-breath-mode="off"])[data-breath-ambient="true"] .folder-stage::before{
+  opacity:var(--v31-floor-opacity)!important;
+  filter:blur(var(--v31-floor-blur))!important;
+}
+
+.breath-particles{
+  position:absolute;inset:0;width:100%;height:100%;z-index:3;
+  pointer-events:none;opacity:.72;mix-blend-mode:screen;
+}
+.folder-deck{z-index:12}
+.stack-ambient{z-index:1}
+
+/* The complete main panels physically contract/expand. This creates the
+   requested "动次打次" silhouette without changing layout dimensions. */
+html:not([data-breath-mode="off"])[data-breath-panels="true"] .sidebar.glass,
+html:not([data-breath-mode="off"])[data-breath-panels="true"] .visual.glass,
+html:not([data-breath-mode="off"])[data-breath-panels="true"] .right.glass{
+  scale:var(--v31-panel-scale);
+  filter:brightness(var(--v31-panel-brightness));
+  transform-origin:50% 50%;
+  will-change:scale,filter;
+}
+
+.v3-breath-surface{
+  position:absolute;inset:1px;z-index:20;border-radius:inherit;pointer-events:none;
+  opacity:var(--v31-panel-alpha);
+  background:
+    radial-gradient(ellipse at 52% -8%,rgba(var(--theme-highlight-rgb),.22),transparent 42%),
+    linear-gradient(112deg,rgba(var(--theme-accent-rgb),.045),transparent 24%,transparent 76%,rgba(var(--theme-highlight-rgb),.035));
+  box-shadow:
+    inset 0 1px 0 rgba(var(--theme-highlight-rgb),var(--v31-panel-edge)),
+    inset 0 0 20px rgba(var(--theme-accent-rgb),calc(var(--v31-panel-alpha)*.22));
+  mix-blend-mode:screen;
+  will-change:opacity;
+}
+html[data-breath-panels="false"] .v3-breath-surface,
+html[data-breath-mode="off"] .v3-breath-surface{display:none}
+
+/* Fluid cards now breathe as complete cards: card shell, internal fluid body and
+   rim all move together. The edge halo remains the sharpest cue, but no longer
+   carries the whole effect alone. */
+.v3-fluid-breath{
+  position:absolute;inset:1px;z-index:7;border-radius:inherit;pointer-events:none;
+  opacity:var(--fluid-local-alpha, var(--v31-fluid-alpha));
+  scale:var(--fluid-local-scale, var(--v31-fluid-scale));
+  transform-origin:50% 50%;
+  border:1px solid rgba(var(--theme-highlight-rgb),var(--fluid-local-edge, var(--v31-fluid-edge)));
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--theme-highlight-rgb),calc(var(--fluid-local-edge, var(--v31-fluid-edge))*.46)),
+    inset 0 1px 0 rgba(var(--theme-highlight-rgb),calc(var(--fluid-local-edge, var(--v31-fluid-edge))*.88)),
+    inset 0 -1px 0 rgba(var(--theme-accent-rgb),calc(var(--fluid-local-edge, var(--v31-fluid-edge))*.36)),
+    0 0 var(--fluid-local-glow, var(--v31-fluid-glow)) rgba(var(--theme-accent-rgb),calc(var(--fluid-local-edge, var(--v31-fluid-edge))*.42));
+  filter:brightness(var(--fluid-local-brightness, var(--v31-fluid-brightness)));
+  mix-blend-mode:screen;
+  will-change:opacity,scale,filter,box-shadow;
+}
+html[data-breath-fluid="false"] .v3-fluid-breath,
+html[data-breath-mode="off"] .v3-fluid-breath{display:none}
+
+html:not([data-breath-mode="off"])[data-breath-panels="true"] .stack-progress::after{
+  opacity:var(--v31-progress-alpha)!important;
+}
+
+html[data-breath-mode="off"] .folder-card.active{scale:1!important;translate:0 0!important}
+html[data-breath-mode="off"] .folder-deck{translate:0 0!important}
+html[data-breath-mode="off"] .stack-ambient{scale:1;opacity:.30!important}
+html[data-breath-mode="off"] .sidebar.glass,
+html[data-breath-mode="off"] .visual.glass,
+html[data-breath-mode="off"] .right.glass{scale:1!important;filter:none!important}
+
+.breath-mode-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:13px}
+.breath-mode-option{
+  height:38px;border:1px solid rgba(255,255,255,.08);border-radius:11px;
+  background:rgba(255,255,255,.03);color:#8f9a94;font-size:9px;cursor:pointer;transition:.2s ease;
+}
+.breath-mode-option:hover,.breath-mode-option.active{
+  border-color:rgba(var(--theme-accent-rgb),.38);
+  background:rgba(var(--theme-accent-rgb),.12);color:#edfff5;
+}
+.breath-preview{
+  position:relative;height:74px;margin:0 0 13px;border:1px solid rgba(var(--theme-highlight-rgb),.11);
+  border-radius:15px;overflow:hidden;background:rgba(var(--theme-panel2-rgb),.46);
+  scale:var(--v31-panel-scale);transform-origin:50% 50%;
+}
+.breath-preview::before{
+  content:"";position:absolute;left:50%;top:50%;width:82px;height:32px;transform:translate(-50%,-50%) scale(var(--v31-ambient-scale));
+  border-radius:50%;background:radial-gradient(ellipse,rgba(var(--theme-accent-rgb),.34),transparent 70%);filter:blur(7px);opacity:var(--v31-ambient-opacity);
+}
+.breath-preview i{
+  position:absolute;left:50%;top:50%;width:32px;height:46px;transform:translate(-50%,-50%);
+  translate:0 var(--v31-card-lift);scale:var(--v31-card-scale);border-radius:7px;
+  border:1px solid rgba(var(--theme-highlight-rgb),.72);
+  background:linear-gradient(145deg,rgba(var(--theme-accent-rgb),.76),rgba(var(--theme-shadow-rgb),.80));
+  box-shadow:0 0 var(--v31-card-glow-near) rgba(var(--theme-accent-rgb),var(--v31-card-glow-alpha));
+}
+.breath-preview em{
+  position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(var(--theme-highlight-rgb),.72);box-shadow:0 0 4px rgba(var(--theme-accent-rgb),.42);
+}
+.breath-preview em:nth-of-type(1){left:27%;top:34%}.breath-preview em:nth-of-type(2){left:37%;top:66%;width:2px;height:2px}.breath-preview em:nth-of-type(3){right:31%;top:29%;width:2px;height:2px}.breath-preview em:nth-of-type(4){right:24%;top:63%}
+.breath-switches{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.breath-switches .theme-switch{min-width:0}
+.breath-test-row{display:flex;align-items:center;gap:9px;margin-top:12px}
+.breath-test-btn{
+  flex:0 0 auto;height:33px;padding:0 12px;border-radius:10px;border:1px solid rgba(var(--theme-accent-rgb),.28);
+  background:rgba(var(--theme-accent-rgb),.09);color:#dfffee;font-size:9px;cursor:pointer;
+}
+.breath-test-btn.is-testing{background:rgba(var(--theme-accent-rgb),.20);box-shadow:0 0 12px rgba(var(--theme-accent-rgb),.10)}
+.breath-test-status{font-size:8.5px;color:#748079;line-height:1.45}
+.breath-help{margin:9px 0 0;color:#748079;font-size:8.5px;line-height:1.55}
+
+
+/* Unified whole-dashboard breathing and stronger layered fluid rhythm */
+.editbar{display:none!important}
+.toast{bottom:24px}
+
+:root{
+  --v33-top-lift:0px;
+  --v33-top-scale:1;
+  --v33-top-brightness:1;
+  --v33-queue-scale:1;
+  --v33-queue-lift:0px;
+  --v33-queue-brightness:1;
+  --v33-timeline-scale:1;
+  --v33-timeline-brightness:1;
+  --v33-right-inner-scale:1;
+  --v33-right-inner-brightness:1;
+  --v33-sidebar-inner-brightness:1;
+}
+
+html:not([data-breath-mode="off"]) .topbar{
+  translate:0 var(--v33-top-lift);
+  scale:var(--v33-top-scale);
+  filter:brightness(var(--v33-top-brightness));
+  transform-origin:50% 50%;
+  will-change:translate,scale,filter;
+}
+html:not([data-breath-mode="off"]) .queue{
+  translate:0 var(--v33-queue-lift);
+  scale:var(--v33-queue-scale);
+  filter:brightness(var(--v33-queue-brightness));
+  transform-origin:50% 50%;
+  will-change:translate,scale,filter;
+}
+html:not([data-breath-mode="off"]) .timeline{
+  scale:var(--v33-timeline-scale);
+  filter:brightness(var(--v33-timeline-brightness));
+  transform-origin:50% 50%;
+  will-change:scale,filter;
+}
+html:not([data-breath-mode="off"]) .right-head,
+html:not([data-breath-mode="off"]) .detail-id,
+html:not([data-breath-mode="off"]) .detail-title,
+html:not([data-breath-mode="off"]) .detail-desc,
+html:not([data-breath-mode="off"]) .detail-grid,
+html:not([data-breath-mode="off"]) .ai-box,
+html:not([data-breath-mode="off"]) .right-actions{
+  scale:var(--v33-right-inner-scale);
+  filter:brightness(var(--v33-right-inner-brightness));
+  transform-origin:50% 50%;
+  will-change:scale,filter;
+}
+html:not([data-breath-mode="off"]) .sidebar .brand,
+html:not([data-breath-mode="off"]) .sidebar .nav,
+html:not([data-breath-mode="off"]) .sidebar .workspace{
+  filter:brightness(var(--v33-sidebar-inner-brightness));
+  will-change:filter;
+}
+
+.queue .section-head,.queue .tabs,.queue .group,.queue .note-row{
+  translate:0 var(--data-breath-lift,0px);
+  scale:var(--data-breath-scale,1);
+  filter:brightness(var(--data-breath-brightness,1));
+  transform-origin:50% 50%;
+  will-change:translate,scale,filter,box-shadow;
+}
+.queue .group{
+  box-shadow:0 0 var(--data-breath-glow,0px) rgba(var(--theme-accent-rgb),var(--data-breath-alpha,0));
+}
+.queue .group-dot,.tiny-badge,.active-dot,.state-dot{
+  filter:brightness(var(--data-breath-brightness,1));
+  box-shadow:0 0 var(--data-dot-glow,8px) rgba(var(--theme-accent-rgb),var(--data-dot-alpha,.35));
+}
+
+/* Layered rhythm is intentionally more asymmetric: middle cards form the main
+   peaks, edge cards act as lower ridgelines. */
+html[data-fluid-rhythm="layered"] .fluid-stat{transition:none}
+
+
+/* 顶栏字段级呼吸：标题、搜索框、功能按钮与主操作按钮独立参与统一节拍 */
+html:not([data-breath-mode="off"]) .topbar .title-block,
+html:not([data-breath-mode="off"]) .topbar .search,
+html:not([data-breath-mode="off"]) .topbar .top-actions > .icon-btn,
+html:not([data-breath-mode="off"]) .topbar .top-actions > .pill-btn{
+  translate:0 var(--top-field-lift,0px);
+  scale:var(--top-field-scale,1);
+  filter:
+    brightness(var(--top-field-brightness,1))
+    drop-shadow(0 0 var(--top-field-glow,0px) rgba(var(--theme-accent-rgb),var(--top-field-glow-alpha,0)));
+  transform-origin:50% 50%;
+  will-change:translate,scale,filter;
+}
+html:not([data-breath-mode="off"]) .topbar .search{
+  border-color:rgba(var(--theme-highlight-rgb),var(--top-field-border-alpha,.10));
+}
+html:not([data-breath-mode="off"]) .topbar .top-actions > .icon-btn,
+html:not([data-breath-mode="off"]) .topbar .top-actions > .pill-btn{
+  border-color:rgba(var(--theme-highlight-rgb),var(--top-field-border-alpha,.12));
+}
+html[data-breath-mode="off"] .topbar .title-block,
+html[data-breath-mode="off"] .topbar .search,
+html[data-breath-mode="off"] .topbar .top-actions > .icon-btn,
+html[data-breath-mode="off"] .topbar .top-actions > .pill-btn{
+  translate:0 0!important;scale:1!important;filter:none!important;
+}

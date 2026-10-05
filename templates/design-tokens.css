@@ -1,0 +1,29 @@
+:root {
+  --ui-bg: #000000;
+  --panel-rgb: 16, 23, 19;
+  --panel-deep-rgb: 8, 13, 11;
+  --accent: #00e676;
+  --accent-rgb: 0, 230, 118;
+  --highlight: #93ffd0;
+  --highlight-rgb: 147, 255, 208;
+  --shadow-accent: #006b3a;
+  --shadow-accent-rgb: 0, 107, 58;
+
+  --panel-opacity: .68;
+  --panel-deep-opacity: .74;
+  --surface-haze: .05;
+  --backdrop-blur: 10px;
+  --edge-alpha: .10;
+
+  --text-primary: #f2f5f3;
+  --text-secondary: #c2cbc6;
+  --text-tertiary: #9ea9a3;
+
+  --radius-panel: 22px;
+  --radius-control: 12px;
+  --radius-fluid: 30px;
+
+  --shadow-panel:
+    0 24px 70px rgba(0,0,0,.55),
+    inset 0 1px 0 rgba(255,255,255,.08);
+}

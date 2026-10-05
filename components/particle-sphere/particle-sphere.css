@@ -1,0 +1,78 @@
+/* ========================================================================== 
+   Particle Core · startup foreground → persistent background particle sphere
+   ========================================================================== */
+:root{
+  --sphere-bg-opacity:.16;
+  --sphere-layer-filter:brightness(1) saturate(1.04);
+}
+body{isolation:isolate}
+body::before{z-index:0}
+.app{position:relative;z-index:3;transition:filter 1.15s ease,opacity 1.15s ease,transform 1.15s cubic-bezier(.2,.8,.2,1)}
+body.sphere-intro-active .app{filter:blur(10px) brightness(.20) saturate(.70);opacity:.34;transform:scale(.988);pointer-events:none}
+.knowledge-sphere-system{
+  position:fixed;inset:0;z-index:2;overflow:hidden;pointer-events:none;
+  opacity:var(--sphere-bg-opacity);filter:var(--sphere-layer-filter);
+  transition:opacity 1.05s ease,filter 1.05s ease;
+}
+.knowledge-sphere-system.is-intro{z-index:900;opacity:1;pointer-events:auto;filter:brightness(1) saturate(1.05)}
+.knowledge-sphere-system.is-transitioning{z-index:900;pointer-events:none;filter:brightness(1) saturate(1.05)}
+.knowledge-sphere-system.is-intro::before{content:"";position:absolute;inset:0;z-index:0;background:radial-gradient(circle at 50% 48%,rgba(1,5,16,.50),rgba(0,2,8,.82) 74%,rgba(0,1,5,.90));pointer-events:none}
+.knowledge-sphere-system.is-intro .knowledge-sphere-canvas,.knowledge-sphere-system.is-intro .sphere-entry-ui{z-index:2}
+.knowledge-sphere-system.is-hidden{display:none}
+.knowledge-sphere-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;z-index:1}
+.sphere-entry-ui{
+  position:absolute;left:50%;bottom:9.5vh;transform:translateX(-50%);z-index:4;
+  display:flex;flex-direction:column;align-items:center;gap:11px;
+  transition:opacity .5s ease,transform .6s ease;
+}
+.knowledge-sphere-system:not(.is-intro) .sphere-entry-ui{opacity:0;transform:translateX(-50%) translateY(14px);pointer-events:none}
+.knowledge-sphere-system.is-transitioning .sphere-entry-ui{display:none!important}
+.sphere-entry-title{font-size:11px;letter-spacing:.18em;color:rgba(205,228,255,.64);text-transform:uppercase}
+.sphere-enter-btn{
+  min-width:188px;height:44px;padding:0 22px;border-radius:999px;
+  border:1px solid rgba(154,216,255,.34);background:rgba(5,14,32,.44);
+  color:#eaf7ff;font-size:13px;font-weight:600;letter-spacing:.08em;cursor:pointer;
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 14px 40px rgba(0,0,0,.32),0 0 28px rgba(91,151,255,.08);
+}
+.sphere-enter-btn:hover{border-color:rgba(171,235,255,.62);background:rgba(10,28,58,.58);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 17px 46px rgba(0,0,0,.38),0 0 34px rgba(105,173,255,.15)}
+.sphere-entry-tip{font-size:10px;color:rgba(145,169,201,.60)}
+.sphere-quick-status{
+  position:fixed;left:50%;bottom:15px;z-index:85;transform:translateX(-50%);
+  display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:999px;
+  border:1px solid rgba(125,194,255,.10);background:rgba(3,10,22,.38);
+  color:#71849f;font-size:9px;opacity:0;pointer-events:none;transition:opacity .25s ease;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)
+}
+.sphere-quick-status.show{opacity:1}.sphere-quick-status i{width:5px;height:5px;border-radius:50%;background:#7de8ff;box-shadow:0 0 8px #7de8ff}
+
+/* Sphere settings trigger uses text, matching the icon-free topbar. */
+.sphere-settings-trigger{color:#b9dfff!important;border-color:rgba(100,179,255,.20)!important;background:rgba(68,126,219,.055)!important}
+.sphere-settings-trigger:hover{color:#fff!important;border-color:rgba(125,214,255,.42)!important;background:rgba(79,151,255,.12)!important}
+.sphere-panel{
+  position:fixed;z-index:1210;right:18px;top:18px;bottom:18px;width:min(380px,calc(100vw - 36px));
+  display:flex;flex-direction:column;overflow:hidden;color:#eaf3ff;
+  border:1px solid rgba(142,199,255,.15);border-radius:24px;
+  background:linear-gradient(155deg,rgba(15,25,43,.965),rgba(3,8,18,.985));
+  box-shadow:0 30px 100px rgba(0,0,0,.70),inset 0 1px 0 rgba(255,255,255,.08);
+  transform:translateX(calc(100% + 40px));opacity:0;pointer-events:none;
+  transition:.34s cubic-bezier(.2,.8,.2,1)
+}
+.sphere-panel.is-open{transition:none!important;transform:translateX(0)!important;opacity:1!important;pointer-events:auto!important}
+.sphere-panel-head{display:flex;justify-content:space-between;align-items:flex-start;padding:21px 21px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sphere-panel-kicker{display:block;margin-bottom:5px;color:#7de8ff;font-size:9px;font-weight:600;letter-spacing:.14em}
+.sphere-panel h2{margin:0;font-size:20px;line-height:1.25}.sphere-panel-close{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);color:#b7c8dc;font-size:22px;cursor:pointer}
+.sphere-panel-body{flex:1;min-height:0;overflow:auto;padding:17px 19px 24px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.12) transparent}
+.sphere-live-note{margin:0 0 14px;padding:10px 11px;border:1px solid rgba(125,232,255,.12);border-radius:11px;background:rgba(72,139,255,.035);color:#7f94af;font-size:9px;line-height:1.55}
+.sphere-fieldset{margin:0 0 15px;padding:13px;border:1px solid rgba(255,255,255,.075);border-radius:15px;background:rgba(255,255,255,.024)}
+.sphere-fieldset legend{padding:0 7px;color:#b5c4d6;font-size:11px;font-weight:600}
+.sphere-select-row{display:grid;grid-template-columns:1fr 156px;align-items:center;gap:12px;margin:0 0 13px;color:#a8b8cb;font-size:10px}
+.sphere-select-row:last-child{margin-bottom:0}.sphere-select-row select{width:100%;height:36px;padding:0 10px;border:1px solid rgba(255,255,255,.10);border-radius:10px;background:#0a1220;color:#e9f3ff;outline:none}
+.sphere-range{display:block;margin-bottom:13px}.sphere-range:last-child{margin-bottom:0}.sphere-range>span{display:flex;justify-content:space-between;margin-bottom:7px;color:#a8b8cb;font-size:10px}.sphere-range output{color:#eef7ff;font-variant-numeric:tabular-nums}.sphere-range input{width:100%;accent-color:#7de8ff}
+.sphere-color-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.sphere-color-grid label{display:flex;flex-direction:column;gap:6px;color:#8497b0;font-size:9px}.sphere-color-grid input{width:100%;height:38px;padding:2px;border:1px solid rgba(255,255,255,.10);border-radius:10px;background:#09101d;cursor:pointer}.sphere-color-grid code{font-family:monospace;font-size:8px;color:#aec3da}
+.sphere-switch{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid rgba(255,255,255,.055);cursor:pointer}.sphere-switch:first-child{border-top:0}.sphere-switch span{display:flex;flex-direction:column}.sphere-switch b{font-size:11px;color:#dce8f5}.sphere-switch small{font-size:8px;color:#74869e;margin-top:3px}.sphere-switch input{accent-color:#7de8ff}
+.sphere-inline-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:11px}.sphere-inline-actions button,.sphere-panel-actions button{min-height:38px;border:1px solid rgba(255,255,255,.10);border-radius:11px;background:rgba(255,255,255,.045);color:#aec0d4;font-size:9px;cursor:pointer}.sphere-inline-actions button:hover,.sphere-panel-actions button:hover{background:rgba(255,255,255,.08);color:#fff}.sphere-inline-actions .accent{border-color:rgba(125,232,255,.30);background:rgba(76,147,255,.12);color:#eaf8ff}
+.sphere-panel-actions{display:grid;grid-template-columns:1fr 1.25fr;gap:8px;padding:14px 18px 18px;border-top:1px solid rgba(255,255,255,.08);background:rgba(2,6,14,.42)}.sphere-panel-actions button.primary{border-color:rgba(125,232,255,.32);background:linear-gradient(180deg,rgba(72,150,255,.25),rgba(58,77,183,.20));color:#eff9ff}
+.sphere-palette-preview{height:72px;margin:0 0 13px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:radial-gradient(circle at 28% 42%,var(--sphere-preview-hi,#b8f5ff),transparent 18%),radial-gradient(circle at 57% 50%,var(--sphere-preview-main,#839dff),transparent 32%),radial-gradient(circle at 82% 60%,var(--sphere-preview-shadow,#302a71),transparent 34%),#040818;box-shadow:inset 0 1px rgba(255,255,255,.08)}
+@media(max-width:1365px){.sphere-panel{right:12px;top:12px;bottom:12px}.sphere-entry-ui{bottom:7vh}}
+@media(prefers-reduced-motion:reduce){.knowledge-sphere-system,.app,.sphere-panel{transition:none!important}}

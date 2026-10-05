@@ -1,0 +1,49 @@
+{
+  "console_errors": [],
+  "page_errors": [],
+  "checks": {
+    "intro_visible": true,
+    "dashboard_visible": true,
+    "particle_state": "background",
+    "fluid_cards": [
+      {
+        "id": "active",
+        "w": 300,
+        "h": 150,
+        "fallback": true
+      },
+      {
+        "id": "pending",
+        "w": 300,
+        "h": 150,
+        "fallback": true
+      },
+      {
+        "id": "completed",
+        "w": 300,
+        "h": 150,
+        "fallback": true
+      },
+      {
+        "id": "alerts",
+        "w": 300,
+        "h": 150,
+        "fallback": true
+      }
+    ],
+    "fluid_nonzero": true,
+    "card_count": 12,
+    "focus_after_click": "Platform",
+    "fluid_panel": true,
+    "acrylic_panel": true,
+    "theme_panel": true,
+    "particle_panel": true
+  },
+  "screenshots": [
+    "qa-intro.png",
+    "qa-dashboard.png",
+    "qa-fluid-settings.png"
+  ],
+  "harness": "Chromium + Playwright set_content; in-memory localStorage shim used because local/file navigation is policy-blocked.",
+  "pass": true
+}
